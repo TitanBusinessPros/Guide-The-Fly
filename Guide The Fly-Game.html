@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Drift</title>
+    <link rel="icon" type="image/png" href="https://github.com/TitanBusinessPros/Guide-The-Fly/raw/main/Guide%20The%20Fly%20Sprite-1.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a1a 0%, #1a0a2e 50%, #16213e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 20px 0;
+        }
+
+        .game-container {
+            background: rgba(20, 20, 40, 0.8);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 255, 255, 0.2);
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .game-logo {
+            max-width: 400px;
+            width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.5));
+        }
+
+        h1 {
+            color: #00ffff;
+            font-size: 2.5em;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+
+        .stat-box {
+            background: rgba(0, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+        }
+
+        .stat-label {
+            color: #00ffff;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+
+        .stat-value {
+            color: #ffffff;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        #gameCanvas {
+            border: 3px solid #00ffff;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+            display: block;
+            background: #0a0a1a;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #00ffff 0%, #0080ff 100%);
+            color: #0a0a1a;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 255, 255, 0.5);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .audio-control {
+            background: linear-gradient(135deg, #ff00ff 0%, #ff0080 100%);
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 0, 255, 0.3);
+        }
+
+        .audio-control:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 0, 255, 0.5);
+        }
+
+        .instructions {
+            color: #00ffff;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .level-info {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .level-title {
+            color: #00ffff;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .level-description {
+            font-size: 0.95em;
+            line-height: 1.4;
+            opacity: 0.9;
+        }
+
+        .level-complete {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.6);
+            display: none;
+            z-index: 1000;
+            text-align: center;
+        }
+
+        .level-complete h2 {
+            color: #00ffff;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .level-complete p {
+            color: #ffffff;
+            margin: 10px 0;
+            font-size: 1.2em;
+        }
+
+        .start-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .start-overlay h2 {
+            color: #00ffff;
+            font-size: 3em;
+            text-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+        }
+
+        .start-button {
+            background: linear-gradient(135deg, #00ffff 0%, #0080ff 100%);
+            color: #0a0a1a;
+            border: none;
+            padding: 20px 60px;
+            font-size: 1.8em;
+            font-weight: bold;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 30px rgba(0, 255, 255, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        .start-button:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 12px 40px rgba(0, 255, 255, 0.7);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 8px 30px rgba(0, 255, 255, 0.5);
+            }
+            50% {
+                box-shadow: 0 8px 50px rgba(0, 255, 255, 0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <img src="https://github.com/TitanBusinessPros/Guide-The-Fly/raw/main/Guide%20The%20Fly%20Logo.png" alt="Guide The Fly" class="game-logo">
+            <h1>⚛️ QUANTUM DRIFT</h1>
+        </div>
+        <div class="level-info" id="levelInfo">
+            <div class="level-title" id="levelTitle">Level 1: Getting Started</div>
+            <div class="level-description" id="levelDescription">Click to place gravity wells that pull the particle. Guide it to the green goal!</div>
+        </div>
+        <div class="stats">
+            <div class="stat-box">
+                <div class="stat-label">LEVEL</div>
+                <div class="stat-value" id="levelDisplay">1</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">TIME</div>
+                <div class="stat-value" id="timeDisplay">0.0s</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">BEST TIME</div>
+                <div class="stat-value" id="bestTimeDisplay">--</div>
+            </div>
+        </div>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div class="controls">
+            <button id="restartBtn">↻ RESTART LEVEL</button>
+            <button id="nextBtn" style="display:none;">→ NEXT LEVEL</button>
+            <button id="audioToggle" class="audio-control">🔊 MUTE</button>
+        </div>
+        <div class="instructions">
+            🖱️ CLICK to place gravity wells • DRAG to create repulsion fields • Guide the particle to the goal!
+        </div>
+    </div>
+
+    <div class="level-complete" id="levelComplete">
+        <h2>✨ LEVEL COMPLETE! ✨</h2>
+        <p id="completionTime"></p>
+        <p id="bestTimeMsg"></p>
+    </div>
+
+    <div class="start-overlay" id="startOverlay">
+        <h2>🎮 GUIDE THE FLY 🎮</h2>
+        <button class="start-button" id="startGameBtn">START GAME</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Background music
+        const bgMusic = new Audio('https://github.com/TitanBusinessPros/Air-Hockey/raw/main/Guide%20The%20Fly.mp3');
+        bgMusic.loop = true;
+        bgMusic.volume = 0.5;
+        let musicPlaying = false;
+
+        // Start music on first user interaction
+        function startMusic() {
+            if (!musicPlaying) {
+                bgMusic.play().catch(e => console.log('Audio play failed:', e));
+                musicPlaying = true;
+            }
+        }
+
+        // Game state (in-memory storage)
+        let gameState = {
+            currentLevel: 1,
+            levelTimes: {},
+            particle: null,
+            gravityWells: [],
+            repulsionFields: [],
+            obstacles: [],
+            goal: null,
+            startTime: null,
+            isComplete: false,
+            isPaused: false,
+            dragStart: null,
+            particleImage: null,
+            goalImage: null,
+            imagesLoaded: false
+        };
+
+        // Load images
+        const particleImg = new Image();
+        particleImg.src = 'https://github.com/TitanBusinessPros/Guide-The-Fly/raw/main/Guide%20The%20Fly%20Sprite-1.png';
+        particleImg.onload = () => {
+            gameState.particleImage = particleImg;
+            checkImagesLoaded();
+        };
+
+        const goalImg = new Image();
+        goalImg.src = 'https://github.com/TitanBusinessPros/Guide-The-Fly/raw/main/Guide%20The%20Fly%20Sprite-2.png';
+        goalImg.onload = () => {
+            gameState.goalImage = goalImg;
+            checkImagesLoaded();
+        };
+
+        function checkImagesLoaded() {
+            if (gameState.particleImage && gameState.goalImage) {
+                gameState.imagesLoaded = true;
+            }
+        }
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.vx = 0;
+                this.vy = 0;
+                this.radius = 8;
+                this.trail = [];
+                this.maxTrail = 30;
+            }
+
+            update() {
+                this.trail.push({x: this.x, y: this.y});
+                if (this.trail.length > this.maxTrail) this.trail.shift();
+
+                // Apply gravity wells
+                gameState.gravityWells.forEach(well => {
+                    const dx = well.x - this.x;
+                    const dy = well.y - this.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist > 5) {
+                        const force = well.strength / (dist * dist) * 100;
+                        this.vx += (dx / dist) * force;
+                        this.vy += (dy / dist) * force;
+                    }
+                });
+
+                // Apply repulsion fields
+                gameState.repulsionFields.forEach(field => {
+                    const dx = this.x - field.x;
+                    const dy = this.y - field.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < field.radius && dist > 5) {
+                        const force = field.strength / (dist * 0.5);
+                        this.vx += (dx / dist) * force;
+                        this.vy += (dy / dist) * force;
+                    }
+                });
+
+                // Damping
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+
+                // Update position
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Wall collision
+                if (this.x < this.radius || this.x > canvas.width - this.radius) {
+                    this.vx *= -0.5;
+                    this.x = Math.max(this.radius, Math.min(canvas.width - this.radius, this.x));
+                }
+                if (this.y < this.radius || this.y > canvas.height - this.radius) {
+                    this.vy *= -0.5;
+                    this.y = Math.max(this.radius, Math.min(canvas.height - this.radius, this.y));
+                }
+
+                // Obstacle collision
+                gameState.obstacles.forEach(obs => {
+                    if (this.x > obs.x && this.x < obs.x + obs.width &&
+                        this.y > obs.y && this.y < obs.y + obs.height) {
+                        // Simple bounce back
+                        this.vx *= -0.7;
+                        this.vy *= -0.7;
+                        // Push out of obstacle
+                        const centerX = obs.x + obs.width / 2;
+                        const centerY = obs.y + obs.height / 2;
+                        this.x += (this.x - centerX) * 0.1;
+                        this.y += (this.y - centerY) * 0.1;
+                    }
+                });
+
+                // Goal check
+                const dx = this.x - gameState.goal.x;
+                const dy = this.y - gameState.goal.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < gameState.goal.radius) {
+                    completeLevel();
+                }
+            }
+
+            draw() {
+                // Draw trail
+                ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                this.trail.forEach((point, i) => {
+                    if (i === 0) ctx.moveTo(point.x, point.y);
+                    else ctx.lineTo(point.x, point.y);
+                });
+                ctx.stroke();
+
+                // Draw particle image if loaded, otherwise draw circle
+                if (gameState.particleImage && gameState.particleImage.complete) {
+                    const size = this.radius * 3;
+                    ctx.save();
+                    ctx.shadowColor = '#00ffff';
+                    ctx.shadowBlur = 20;
+                    ctx.drawImage(gameState.particleImage, this.x - size, this.y - size, size * 2, size * 2);
+                    ctx.restore();
+                } else {
+                    // Fallback to original circle
+                    const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.radius);
+                    gradient.addColorStop(0, '#ffffff');
+                    gradient.addColorStop(0.5, '#00ffff');
+                    gradient.addColorStop(1, '#0080ff');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Glow effect
+                    ctx.shadowColor = '#00ffff';
+                    ctx.shadowBlur = 20;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                }
+            }
+        }
+
+        // Level designs with descriptions
+        const levels = {
+            1: {
+                title: "Level 1: Getting Started",
+                description: "Click to place gravity wells that pull the particle. Guide it to the green goal!",
+                particle: {x: 50, y: 300},
+                goal: {x: 750, y: 300, radius: 30},
+                obstacles: [
+                    {x: 350, y: 200, width: 100, height: 200}
+                ]
+            },
+            2: {
+                title: "Level 2: The Maze",
+                description: "Navigate through vertical barriers. Use multiple gravity wells to change direction!",
+                particle: {x: 50, y: 50},
+                goal: {x: 750, y: 550, radius: 30},
+                obstacles: [
+                    {x: 200, y: 0, width: 20, height: 400},
+                    {x: 400, y: 200, width: 20, height: 400},
+                    {x: 600, y: 0, width: 20, height: 400}
+                ]
+            },
+            3: {
+                title: "Level 3: Horizontal Challenge",
+                description: "Thread the needle! Click and drag to create repulsion fields that push the particle away.",
+                particle: {x: 400, y: 300},
+                goal: {x: 750, y: 50, radius: 30},
+                obstacles: [
+                    {x: 300, y: 150, width: 200, height: 20},
+                    {x: 300, y: 430, width: 200, height: 20},
+                    {x: 100, y: 250, width: 150, height: 20},
+                    {x: 550, y: 350, width: 150, height: 20}
+                ]
+            },
+            4: {
+                title: "Level 4: The Corridor",
+                description: "Long narrow passage. Use gravity wells to maintain momentum through the tunnel!",
+                particle: {x: 50, y: 300},
+                goal: {x: 750, y: 300, radius: 30},
+                obstacles: [
+                    {x: 200, y: 0, width: 400, height: 220},
+                    {x: 200, y: 380, width: 400, height: 220}
+                ]
+            },
+            5: {
+                title: "Level 5: Spiral Descent",
+                description: "Follow the spiral path down. Balance gravity wells and repulsion fields!",
+                particle: {x: 50, y: 50},
+                goal: {x: 400, y: 550, radius: 30},
+                obstacles: [
+                    {x: 150, y: 0, width: 500, height: 30},
+                    {x: 150, y: 150, width: 30, height: 300},
+                    {x: 150, y: 420, width: 400, height: 30},
+                    {x: 520, y: 200, width: 30, height: 250}
+                ]
+            },
+            6: {
+                title: "Level 6: Zigzag",
+                description: "Sharp turns ahead! Master momentum control to navigate the zigzag pattern.",
+                particle: {x: 50, y: 100},
+                goal: {x: 750, y: 500, radius: 30},
+                obstacles: [
+                    {x: 200, y: 0, width: 30, height: 250},
+                    {x: 400, y: 200, width: 30, height: 400},
+                    {x: 600, y: 0, width: 30, height: 350}
+                ]
+            },
+            7: {
+                title: "Level 7: The Chamber",
+                description: "Enclosed space with obstacles. Use repulsion fields to navigate tight spaces!",
+                particle: {x: 400, y: 300},
+                goal: {x: 100, y: 100, radius: 30},
+                obstacles: [
+                    {x: 0, y: 200, width: 300, height: 30},
+                    {x: 500, y: 200, width: 300, height: 30},
+                    {x: 300, y: 0, width: 30, height: 200},
+                    {x: 300, y: 400, width: 30, height: 200},
+                    {x: 350, y: 250, width: 100, height: 100}
+                ]
+            },
+            8: {
+                title: "Level 8: Double Trouble",
+                description: "Two large obstacles block your path. Precision gravity control required!",
+                particle: {x: 50, y: 300},
+                goal: {x: 750, y: 300, radius: 30},
+                obstacles: [
+                    {x: 250, y: 100, width: 120, height: 200},
+                    {x: 450, y: 300, width: 120, height: 200}
+                ]
+            },
+            9: {
+                title: "Level 9: The Cross",
+                description: "Navigate around a cross-shaped barrier. Strategic well placement is key!",
+                particle: {x: 50, y: 50},
+                goal: {x: 750, y: 550, radius: 30},
+                obstacles: [
+                    {x: 350, y: 0, width: 100, height: 250},
+                    {x: 350, y: 350, width: 100, height: 250},
+                    {x: 200, y: 250, width: 400, height: 100}
+                ]
+            },
+            10: {
+                title: "Level 10: Gauntlet Run",
+                description: "Multiple small barriers create a challenging gauntlet. Keep your momentum!",
+                particle: {x: 50, y: 300},
+                goal: {x: 750, y: 300, radius: 30},
+                obstacles: [
+                    {x: 150, y: 150, width: 60, height: 100},
+                    {x: 150, y: 350, width: 60, height: 100},
+                    {x: 300, y: 200, width: 60, height: 100},
+                    {x: 300, y: 300, width: 60, height: 100},
+                    {x: 450, y: 150, width: 60, height: 100},
+                    {x: 450, y: 350, width: 60, height: 100},
+                    {x: 600, y: 200, width: 60, height: 100},
+                    {x: 600, y: 300, width: 60, height: 100}
+                ]
+            },
+            11: {
+                title: "Level 11: The Arena",
+                description: "Central obstacle with tight passages. Combine gravity and repulsion mastery!",
+                particle: {x: 50, y: 300},
+                goal: {x: 750, y: 300, radius: 30},
+                obstacles: [
+                    {x: 300, y: 200, width: 200, height: 200},
+                    {x: 0, y: 0, width: 800, height: 100},
+                    {x: 0, y: 500, width: 800, height: 100}
+                ]
+            },
+            12: {
+                title: "Level 12: Ultimate Challenge",
+                description: "The final test! Complex maze requiring perfect gravity manipulation. Good luck!",
+                particle: {x: 50, y: 550},
+                goal: {x: 750, y: 50, radius: 30},
+                obstacles: [
+                    {x: 150, y: 450, width: 150, height: 30},
+                    {x: 250, y: 300, width: 30, height: 180},
+                    {x: 250, y: 300, width: 200, height: 30},
+                    {x: 420, y: 150, width: 30, height: 180},
+                    {x: 420, y: 150, width: 200, height: 30},
+                    {x: 590, y: 0, width: 30, height: 150},
+                    {x: 100, y: 100, width: 120, height: 30},
+                    {x: 500, y: 400, width: 120, height: 30}
+                ]
+            }
+        };
+
+        function loadLevel(levelNum) {
+            gameState.currentLevel = levelNum;
+            gameState.gravityWells = [];
+            gameState.repulsionFields = [];
+            gameState.isComplete = false;
+            gameState.startTime = Date.now();
+            
+            document.getElementById('levelDisplay').textContent = levelNum;
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('levelComplete').style.display = 'none';
+
+            // Load level data
+            const level = levels[levelNum];
+            if (level) {
+                gameState.particle = new Particle(level.particle.x, level.particle.y);
+                gameState.goal = level.goal;
+                gameState.obstacles = level.obstacles;
+                
+                document.getElementById('levelTitle').textContent = level.title;
+                document.getElementById('levelDescription').textContent = level.description;
+            } else {
+                // If beyond level 12, loop back to level 1
+                loadLevel(1);
+                return;
+            }
+
+            updateBestTime();
+        }
+
+        function completeLevel() {
+            if (gameState.isComplete) return;
+            gameState.isComplete = true;
+            
+            const completionTime = ((Date.now() - gameState.startTime) / 1000).toFixed(2);
+            const levelKey = `level_${gameState.currentLevel}`;
+            
+            // Update best time
+            if (!gameState.levelTimes[levelKey] || parseFloat(completionTime) < parseFloat(gameState.levelTimes[levelKey])) {
+                gameState.levelTimes[levelKey] = completionTime;
+                document.getElementById('bestTimeMsg').textContent = '🏆 NEW BEST TIME!';
+            } else {
+                document.getElementById('bestTimeMsg').textContent = `Best: ${gameState.levelTimes[levelKey]}s`;
+            }
+
+            document.getElementById('completionTime').textContent = `Time: ${completionTime}s`;
+            document.getElementById('levelComplete').style.display = 'block';
+            document.getElementById('nextBtn').style.display = 'inline-block';
+            
+            updateBestTime();
+        }
+
+        function updateBestTime() {
+            const levelKey = `level_${gameState.currentLevel}`;
+            const bestTime = gameState.levelTimes[levelKey];
+            document.getElementById('bestTimeDisplay').textContent = bestTime ? `${bestTime}s` : '--';
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.fillStyle = '#0a0a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw obstacles
+            gameState.obstacles.forEach(obs => {
+                ctx.fillStyle = '#ff0080';
+                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+                ctx.shadowColor = '#ff0080';
+                ctx.shadowBlur = 15;
+                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+                ctx.shadowBlur = 0;
+            });
+
+            // Draw goal
+            if (gameState.goalImage && gameState.goalImage.complete) {
+                const size = gameState.goal.radius * 1.5;
+                ctx.save();
+                ctx.shadowColor = '#00ff00';
+                ctx.shadowBlur = 20;
+                ctx.drawImage(gameState.goalImage, gameState.goal.x - size, gameState.goal.y - size, size * 2, size * 2);
+                ctx.restore();
+            } else {
+                // Fallback to original circle
+                const goalGradient = ctx.createRadialGradient(
+                    gameState.goal.x, gameState.goal.y, 0,
+                    gameState.goal.x, gameState.goal.y, gameState.goal.radius
+                );
+                goalGradient.addColorStop(0, '#00ff00');
+                goalGradient.addColorStop(1, '#008000');
+                ctx.fillStyle = goalGradient;
+                ctx.beginPath();
+                ctx.arc(gameState.goal.x, gameState.goal.y, gameState.goal.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Draw gravity wells
+            gameState.gravityWells.forEach((well, i) => {
+                ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(well.x, well.y, 15, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+                ctx.fill();
+            });
+
+            // Draw repulsion fields
+            gameState.repulsionFields.forEach(field => {
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(field.x, field.y, field.radius, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
+                ctx.fill();
+            });
+
+            // Draw drag preview
+            if (gameState.dragStart) {
+                const radius = Math.sqrt(
+                    Math.pow(gameState.dragStart.endX - gameState.dragStart.x, 2) +
+                    Math.pow(gameState.dragStart.endY - gameState.dragStart.y, 2)
+                );
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.arc(gameState.dragStart.x, gameState.dragStart.y, radius, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Draw particle
+            gameState.particle.draw();
+
+            // Update time display
+            if (!gameState.isComplete && gameState.startTime) {
+                const elapsed = ((Date.now() - gameState.startTime) / 1000).toFixed(1);
+                document.getElementById('timeDisplay').textContent = `${elapsed}s`;
+            }
+        }
+
+        function gameLoop() {
+            if (!gameState.isComplete) {
+                gameState.particle.update();
+            }
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Mouse events
+        canvas.addEventListener('mousedown', (e) => {
+            startMusic(); // Start music on first interaction
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            gameState.dragStart = {x, y, endX: x, endY: y};
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (gameState.dragStart) {
+                const rect = canvas.getBoundingClientRect();
+                gameState.dragStart.endX = e.clientX - rect.left;
+                gameState.dragStart.endY = e.clientY - rect.top;
+            }
+        });
+
+        canvas.addEventListener('mouseup', (e) => {
+            if (gameState.dragStart) {
+                const rect = canvas.getBoundingClientRect();
+                const endX = e.clientX - rect.left;
+                const endY = e.clientY - rect.top;
+                const radius = Math.sqrt(
+                    Math.pow(endX - gameState.dragStart.x, 2) +
+                    Math.pow(endY - gameState.dragStart.y, 2)
+                );
+
+                if (radius < 10) {
+                    // Click - add gravity well
+                    gameState.gravityWells.push({
+                        x: gameState.dragStart.x,
+                        y: gameState.dragStart.y,
+                        strength: 2
+                    });
+                } else {
+                    // Drag - add repulsion field
+                    gameState.repulsionFields.push({
+                        x: gameState.dragStart.x,
+                        y: gameState.dragStart.y,
+                        radius: radius,
+                        strength: 0.8
+                    });
+                }
+                
+                gameState.dragStart = null;
+            }
+        });
+
+        // Buttons
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            startMusic(); // Start music on button click
+            loadLevel(gameState.currentLevel);
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            startMusic(); // Start music on button click
+            loadLevel(gameState.currentLevel + 1);
+        });
+
+        // Audio toggle button
+        document.getElementById('audioToggle').addEventListener('click', function() {
+            if (bgMusic.paused) {
+                bgMusic.play().catch(e => console.log('Audio play failed:', e));
+                this.textContent = '🔊 MUTE';
+                musicPlaying = true;
+            } else {
+                bgMusic.pause();
+                this.textContent = '🔇 UNMUTE';
+            }
+        });
+
+        // Start game button
+        document.getElementById('startGameBtn').addEventListener('click', () => {
+            // Start music
+            bgMusic.play().then(() => {
+                musicPlaying = true;
+                console.log('Music started successfully');
+            }).catch(e => {
+                console.log('Audio play failed:', e);
+                // Try again with user interaction
+                document.body.addEventListener('click', () => {
+                    if (!musicPlaying) {
+                        bgMusic.play().catch(err => console.log('Retry failed:', err));
+                        musicPlaying = true;
+                    }
+                }, { once: true });
+            });
+            
+            // Hide start overlay
+            document.getElementById('startOverlay').style.display = 'none';
+        });
+
+        // Start game
+        loadLevel(1);
+        gameLoop();
+    </script>
+</body>
+</html>
