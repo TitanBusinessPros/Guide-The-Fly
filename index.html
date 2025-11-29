@@ -21,18 +21,26 @@
             min-height: 100vh;
             overflow-y: auto;
             overflow-x: hidden;
-            padding: 20px 0;
+            padding: 10px;
+            margin: 0;
         }
 
         .game-container {
             background: rgba(20, 20, 40, 0.8);
             border-radius: 20px;
-            padding: 30px;
+            padding: 15px;
             box-shadow: 0 20px 60px rgba(0, 255, 255, 0.3);
             backdrop-filter: blur(10px);
             border: 2px solid rgba(0, 255, 255, 0.2);
-            max-width: 900px;
+            width: 100%;
+            max-width: 860px;
             margin: auto;
+        }
+
+        @media (min-width: 768px) {
+            .game-container {
+                padding: 30px;
+            }
         }
 
         .header {
@@ -48,6 +56,12 @@
             filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.5));
         }
 
+        @media (max-width: 768px) {
+            .game-logo {
+                max-width: 280px;
+            }
+        }
+
         h1 {
             color: #00ffff;
             font-size: 2.5em;
@@ -56,11 +70,25 @@
             display: none;
         }
 
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+
         .stats {
             display: flex;
             justify-content: space-around;
             margin-bottom: 20px;
-            gap: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .stats {
+                gap: 8px;
+                margin-bottom: 15px;
+            }
         }
 
         .stat-box {
@@ -68,6 +96,15 @@
             padding: 10px 20px;
             border-radius: 10px;
             border: 1px solid rgba(0, 255, 255, 0.3);
+            flex: 1;
+            min-width: 80px;
+        }
+
+        @media (max-width: 768px) {
+            .stat-box {
+                padding: 8px 12px;
+                min-width: 70px;
+            }
         }
 
         .stat-label {
@@ -76,10 +113,22 @@
             opacity: 0.7;
         }
 
+        @media (max-width: 768px) {
+            .stat-label {
+                font-size: 0.75em;
+            }
+        }
+
         .stat-value {
             color: #ffffff;
             font-size: 1.5em;
             font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .stat-value {
+                font-size: 1.2em;
+            }
         }
 
         #gameCanvas {
@@ -88,6 +137,10 @@
             box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
             display: block;
             background: #0a0a1a;
+            width: 100%;
+            height: auto;
+            max-width: 800px;
+            touch-action: none;
         }
 
         .controls {
@@ -109,6 +162,14 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 4px 15px rgba(0, 255, 255, 0.3);
+            white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            button {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
         }
 
         button:hover {
@@ -146,6 +207,13 @@
             opacity: 0.8;
         }
 
+        @media (max-width: 768px) {
+            .instructions {
+                font-size: 0.75em;
+                margin-top: 10px;
+            }
+        }
+
         .level-info {
             background: rgba(0, 255, 255, 0.1);
             border: 1px solid rgba(0, 255, 255, 0.3);
@@ -155,6 +223,13 @@
             color: #ffffff;
         }
 
+        @media (max-width: 768px) {
+            .level-info {
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+        }
+
         .level-title {
             color: #00ffff;
             font-size: 1.2em;
@@ -162,10 +237,22 @@
             margin-bottom: 8px;
         }
 
+        @media (max-width: 768px) {
+            .level-title {
+                font-size: 1em;
+            }
+        }
+
         .level-description {
             font-size: 0.95em;
             line-height: 1.4;
             opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .level-description {
+                font-size: 0.85em;
+            }
         }
 
         .level-complete {
@@ -214,6 +301,14 @@
             color: #00ffff;
             font-size: 3em;
             text-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        @media (max-width: 768px) {
+            .start-overlay h2 {
+                font-size: 2em;
+            }
         }
 
         .start-button {
@@ -228,6 +323,13 @@
             transition: all 0.3s ease;
             box-shadow: 0 8px 30px rgba(0, 255, 255, 0.5);
             animation: pulse 2s infinite;
+        }
+
+        @media (max-width: 768px) {
+            .start-button {
+                padding: 15px 40px;
+                font-size: 1.4em;
+            }
         }
 
         .start-button:hover {
@@ -795,6 +897,57 @@
 
                 if (radius < 10) {
                     // Click - add gravity well
+                    gameState.gravityWells.push({
+                        x: gameState.dragStart.x,
+                        y: gameState.dragStart.y,
+                        strength: 2
+                    });
+                } else {
+                    // Drag - add repulsion field
+                    gameState.repulsionFields.push({
+                        x: gameState.dragStart.x,
+                        y: gameState.dragStart.y,
+                        radius: radius,
+                        strength: 0.8
+                    });
+                }
+                
+                gameState.dragStart = null;
+            }
+        });
+
+        // Touch events for mobile
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            startMusic();
+            const rect = canvas.getBoundingClientRect();
+            const touch = e.touches[0];
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            
+            gameState.dragStart = {x, y, endX: x, endY: y};
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (gameState.dragStart) {
+                const rect = canvas.getBoundingClientRect();
+                const touch = e.touches[0];
+                gameState.dragStart.endX = touch.clientX - rect.left;
+                gameState.dragStart.endY = touch.clientY - rect.top;
+            }
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (gameState.dragStart) {
+                const radius = Math.sqrt(
+                    Math.pow(gameState.dragStart.endX - gameState.dragStart.x, 2) +
+                    Math.pow(gameState.dragStart.endY - gameState.dragStart.y, 2)
+                );
+
+                if (radius < 10) {
+                    // Tap - add gravity well
                     gameState.gravityWells.push({
                         x: gameState.dragStart.x,
                         y: gameState.dragStart.y,
